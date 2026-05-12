@@ -1,38 +1,45 @@
 import express from 'express';
-import { Product } from '../models/Product.ts';
-import { protect, admin } from '../middleware/authMiddleware.ts';
+import admin from 'firebase-admin';
+import { protect, adminCheck } from '../middleware/authMiddleware.ts';
 
 const router = express.Router();
 
 // Get all products
 router.get('/', async (req, res) => {
+  const db = admin.firestore();
   try {
-    const keyword = req.query.keyword
-      ? {
-          name: {
-            $regex: req.query.keyword as string,
-            $options: 'i',
-          },
-        }
-      : {};
+    let query: admin.firestore.Query = db.collection('products');
 
-    const category = req.query.category && req.query.category !== 'all'
-      ? { category: req.query.category as string }
-      : {};
+    if (req.query.category && req.query.category !== 'all') {
+      query = query.where('category', '==', req.query.category);
+    }
 
-    const products = await Product.find({ ...keyword, ...category });
+    const snapshot = await query.get();
+    let products = snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+
+    // Filter by keyword manually if needed (Firestore doesn't support easy partial matches without external tools)
+    if (req.query.keyword) {
+      const keyword = (req.query.keyword as string).toLowerCase();
+      products = products.filter((p: any) => 
+        p.name?.toLowerCase().includes(keyword) || 
+        p.description?.toLowerCase().includes(keyword)
+      );
+    }
+
     res.json(products);
   } catch (error) {
+    console.error('Firestore Error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Get single product
 router.get('/:id', async (req, res) => {
+  const db = admin.firestore();
   try {
-    const product = await Product.findById(req.params.id);
-    if (product) {
-      res.json(product);
+    const doc = await db.collection('products').doc(req.params.id).get();
+    if (doc.exists) {
+      res.json({ _id: doc.id, ...doc.data() });
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
@@ -42,11 +49,16 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create product (Admin)
-router.post('/', protect, admin, async (req, res) => {
+router.post('/', protect, adminCheck, async (req, res) => {
+  const db = admin.firestore();
   try {
-    const product = new Product(req.body);
-    const createdProduct = await product.save();
-    res.status(201).json(createdProduct);
+    const productData = {
+      ...req.body,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const docRef = await db.collection('products').add(productData);
+    res.status(201).json({ _id: docRef.id, ...productData });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

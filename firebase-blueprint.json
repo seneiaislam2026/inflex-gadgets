@@ -8,7 +8,9 @@
         "name": { "type": "string" },
         "email": { "type": "string" },
         "role": { "type": "string", "enum": ["user", "admin"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "wishlist": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "email", "role"]
     },
@@ -21,13 +23,23 @@
         "description": { "type": "string" },
         "category": { "type": "string" },
         "price": { "type": "number" },
-        "discountPrice": { "type": "number" },
-        "isFeatured": { "type": "boolean" },
+        "stock": { "type": "number" },
         "images": { "type": "array", "items": { "type": "string" } },
+        "specifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "isFeatured": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "description", "category", "price", "images"]
+      "required": ["name", "description", "category", "price"]
     },
     "Order": {
       "title": "Order",
@@ -35,15 +47,70 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
         "items": { "type": "array" },
-        "total": { "type": "number" },
-        "source": { "type": "string", "enum": ["website", "facebook", "manual"] },
-        "deliveryAddress": { "type": "object" },
+        "totalAmount": { "type": "number" },
+        "shippingAddress": {
+          "type": "object",
+          "properties": {
+            "fullName": { "type": "string" },
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "phone": { "type": "string" }
+          }
+        },
+        "paymentMethod": { "type": "string", "enum": ["bKash", "Nagad", "Stripe", "COD"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed"] },
+        "orderStatus": { "type": "string", "enum": ["processing", "shipped", "delivered", "cancelled"] },
+        "customerName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "courierName": { "type": "string", "enum": ["Pathao", "RedX", "Sundarban", "None"] },
+        "trackingId": { "type": "string" },
+        "deliveryStatus": { "type": "string", "enum": ["pending", "shipped", "delivered", "failed", "returned"] },
+        "orderDate": { "type": "string", "format": "date-time" },
+        "deliveryDate": { "type": "string", "format": "date-time" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "status", "items", "total", "deliveryAddress"]
+      "required": ["totalAmount", "paymentMethod"]
+    },
+    "Partner": {
+      "title": "Partner",
+      "description": "A business partner or investor",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "investmentAmount": { "type": "number" },
+        "profitSharePercentage": { "type": "number" },
+        "joinDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "investmentAmount", "profitSharePercentage"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "A billing invoice",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "customerAddress": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "issueDate": { "type": "string", "format": "date-time" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "sent", "paid", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["invoiceNumber", "customerName", "totalAmount"]
     },
     "ImportRequest": {
       "title": "Import Request",
@@ -74,6 +141,14 @@
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
       "description": "Orders placed"
+    },
+    "/partners/{partnerId}": {
+      "schema": { "$ref": "#/entities/Partner" },
+      "description": "Business partners"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Billing invoices"
     },
     "/importRequests/{requestId}": {
       "schema": { "$ref": "#/entities/ImportRequest" },

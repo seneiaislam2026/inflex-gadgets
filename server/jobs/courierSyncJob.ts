@@ -1,6 +1,5 @@
 import cron from 'node-cron';
-import { CourierTrackingCache } from '../models/CourierTrackingCache.ts';
-import { Order } from '../models/Order.ts';
+import admin from 'firebase-admin';
 import { fetchPathaoStatus } from '../services/pathaoService.ts';
 import { fetchRedxStatus } from '../services/redxService.ts';
 import { fetchSundarbanStatus } from '../services/sundarbanService.ts';
@@ -9,15 +8,24 @@ import { fetchSundarbanStatus } from '../services/sundarbanService.ts';
 export const startCourierSyncJob = () => {
   cron.schedule('*/15 * * * *', async () => {
     console.log('[Job] Starting Courier Sync Job...');
+    const db = admin.firestore();
     try {
       // Find orders that are shipped or pending delivery update
-      const activeOrders = await Order.find({
-        trackingId: { $exists: true, $ne: '' },
-        deliveryStatus: { $in: ['pending', 'shipped'] }
-      });
+      const activeOrdersSnapshot = await db.collection('orders')
+        .where('trackingId', '!=', '')
+        .where('deliveryStatus', 'in', ['pending', 'shipped'])
+        .get();
 
-      for (const order of activeOrders) {
+      if (activeOrdersSnapshot.empty) {
+        console.log('[Job] No active orders for sync.');
+        return;
+      }
+
+      for (const doc of activeOrdersSnapshot.docs) {
+        const order = doc.data();
+        const orderId = doc.id;
         let newStatus = order.deliveryStatus;
+        
         try {
           if (order.courierName === 'Pathao') {
             newStatus = await fetchPathaoStatus(order.trackingId);
@@ -28,16 +36,26 @@ export const startCourierSyncJob = () => {
           }
 
           if (newStatus !== order.deliveryStatus) {
-            order.deliveryStatus = newStatus;
-            if (newStatus === 'delivered') order.deliveryDate = new Date();
-            await order.save();
+            const updates: any = {
+              deliveryStatus: newStatus,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
             
-            // Update cache
-            await CourierTrackingCache.findOneAndUpdate(
-              { trackingId: order.trackingId },
-              { latestStatus: newStatus, courierName: order.courierName, lastUpdated: new Date() },
-              { upsert: true }
-            );
+            if (newStatus === 'delivered') {
+              updates.deliveryDate = admin.firestore.FieldValue.serverTimestamp();
+            }
+            
+            await db.collection('orders').doc(orderId).update(updates);
+            
+            // Update cache/tracking collection
+            await db.collection('courierTrackingCache').doc(order.trackingId).set({
+              trackingId: order.trackingId,
+              latestStatus: newStatus,
+              courierName: order.courierName,
+              lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            
+            console.log(`[Job] Updated order ${orderId} to status ${newStatus}`);
           }
         } catch (err) {
           console.error(`[Job] Failed to update tracking for ${order.trackingId}:`, err);

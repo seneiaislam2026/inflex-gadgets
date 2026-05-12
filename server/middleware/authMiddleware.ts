@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User.ts';
+import admin from 'firebase-admin';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -13,24 +12,24 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     try {
       token = req.headers.authorization.split(' ')[1];
 
-      // Bypass for local testing context without a full DB-backed login
-      if (token === 'dev-secret-token') {
-         req.user = { id: 'dev', role: 'admin' };
-         return next();
-      }
+      // Verify Firebase ID token
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      
+      // Get user from Firestore
+      const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+      
+      const user = userDoc.exists ? userDoc.data() : null;
+      
+      req.user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        role: user?.role || 'user',
+        ...user
+      };
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersafejwtsecret') as any;
-
-      const user = await User.findById(decoded.id).select('-password');
-      if (!user) {
-        res.status(401).json({ message: 'Not authorized, user not found' });
-        return;
-      }
-
-      req.user = user;
       next();
     } catch (error) {
-      console.error(error);
+      console.error('Firebase Auth Error:', error);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
   } else {
@@ -38,7 +37,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
   }
 };
 
-export const admin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const adminCheck = (req: AuthRequest, res: Response, next: NextFunction): void => {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {

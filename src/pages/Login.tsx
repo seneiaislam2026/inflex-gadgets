@@ -137,7 +137,9 @@ export default function Login() {
     } catch (err: any) {
       console.error(err);
       let message = 'Authentication failed';
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
+      if (err.code === 'auth/operation-not-allowed') {
+        message = 'Email/Password sign-in is not enabled in your Firebase Console. Please enable it in the Authentication > Sign-in method tab.';
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
         message = 'Invalid email or password. Please check your credentials.';
       } else if (err.code === 'auth/email-already-in-use') {
         message = 'This email is already registered. Please log in instead.';
@@ -178,8 +180,20 @@ export default function Login() {
       
       navigate('/');
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Google Login failed');
+      console.error('Google Login Error:', err);
+      let message = 'Google Login failed';
+      if (err.code === 'auth/popup-blocked') {
+        message = 'Login popup was blocked by your browser. Please allow popups or try opening the app in a new tab.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        message = 'Google Sign-In is not enabled in your Firebase Console. Please enable it in the Authentication > Sign-in method tab.';
+      } else if (err.code === 'auth/unauthorized-domain') {
+        message = 'This domain is not authorized in your Firebase Console. Please add this domain to Authentication > Settings > Authorized domains.';
+      } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+        message = 'Login process was cancelled.';
+      } else {
+        message = err.message || message;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
