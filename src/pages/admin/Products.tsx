@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Upload, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Upload, Link as LinkIcon, Info } from 'lucide-react';
 import { collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase.ts';
+import { formatBDT } from '../../lib/utils.ts';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
@@ -13,6 +14,7 @@ export default function AdminProducts() {
   const initialFormData = {
     name: '',
     description: '',
+    details: '',
     price: 0,
     discountPrice: 0,
     category: '',
@@ -97,7 +99,8 @@ export default function AdminProducts() {
   const handleEdit = (product: any) => {
     setFormData({
       name: product.name,
-      description: product.description,
+      description: product.description || '',
+      details: product.details || '',
       price: product.price,
       discountPrice: product.discountPrice || 0,
       category: product.category,
@@ -180,8 +183,8 @@ export default function AdminProducts() {
                     </div>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">{product.stock > 0 ? 'In Inventory' : 'Depleted'}</p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 line-through">৳{product.price.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 font-black tracking-tight">৳{(product.discountPrice || product.price).toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 line-through">{formatBDT(product.price)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 font-black tracking-tight">{formatBDT(product.discountPrice || product.price)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <div className="flex items-center justify-end gap-2">
                        <button onClick={() => handleEdit(product)} className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition"><Edit className="w-4 h-4"/></button>
@@ -219,7 +222,7 @@ export default function AdminProducts() {
                     </div>
                     <h3 className="text-sm font-black text-slate-900 break-words tracking-tight uppercase italic leading-tight">{product.name}</h3>
                     <div className="flex items-center gap-3 mt-1">
-                       <span className="text-base font-black text-emerald-600 tracking-tight">৳{(product.discountPrice || product.price).toLocaleString()}</span>
+                       <span className="text-base font-black text-emerald-600 tracking-tight">{formatBDT(product.discountPrice || product.price)}</span>
                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 rounded-lg border border-slate-100">
                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
                           <span className="text-[9px] font-black italic">{product.stock || 0} STK</span>
@@ -266,6 +269,24 @@ export default function AdminProducts() {
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Identity of Product*</label>
                   <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="block w-full rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4 focus:border-slate-900 focus:bg-white focus:ring-4 focus:ring-slate-900/5 outline-none text-slate-900 font-bold transition text-sm" placeholder="e.g. Sony WH-1000XM5" />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Short Description*</label>
+                  <input type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="block w-full rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4 focus:border-slate-900 focus:bg-white outline-none text-slate-900 font-medium transition text-sm" placeholder="Brief summary of the product" />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1 flex items-center gap-2">
+                    <Info className="w-3 h-3"/> Detailed Specifications & Info
+                  </label>
+                  <textarea 
+                    value={formData.details} 
+                    onChange={e => setFormData({...formData, details: e.target.value})} 
+                    rows={4}
+                    className="block w-full rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4 focus:border-slate-900 focus:bg-white outline-none text-slate-900 font-medium transition text-sm resize-none" 
+                    placeholder="Technical specs, detailed features, box contents..." 
+                  />
                 </div>
                 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

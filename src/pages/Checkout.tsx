@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase.ts';
 import { Book, Copy, CheckCircle } from 'lucide-react';
+import { formatBDT } from '../lib/utils.ts';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCartStore();
@@ -279,21 +280,21 @@ export default function Checkout() {
         <div className="bg-slate-900 text-white rounded-3xl p-8 flex flex-col space-y-3">
           <div className="flex justify-between text-slate-400 text-sm">
             <span>Subtotal</span>
-            <span>৳{cartTotal().toFixed(2)}</span>
+            <span>{formatBDT(cartTotal())}</span>
           </div>
           <div className="flex justify-between text-slate-400 text-sm">
             <span>Delivery Fee</span>
-            <span>৳{deliveryFee.toFixed(2)}</span>
+            <span>{formatBDT(deliveryFee)}</span>
           </div>
           {discountAmount > 0 && (
           <div className="flex justify-between text-emerald-400 text-sm font-medium">
             <span>Discount ({appliedPromo})</span>
-            <span>-৳{discountAmount.toFixed(2)}</span>
+            <span>-{formatBDT(discountAmount)}</span>
           </div>
           )}
           <div className="pt-4 border-t border-slate-800 flex justify-between items-center text-xl font-bold">
             <p>Total to Pay:</p>
-            <p className="text-emerald-400">৳{totalAmount.toFixed(2)}</p>
+            <p className="text-emerald-400">{formatBDT(totalAmount)}</p>
           </div>
         </div>
 

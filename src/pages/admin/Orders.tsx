@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, orderBy, doc, updateDoc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase.ts';
 import { ShoppingCart, Clock, CheckCircle, Package, Search, Plus, Facebook, Globe, User, XCircle, Book, Trash2, Copy, Truck, ShieldAlert, ShieldCheck, Mail, MessageSquare, Phone } from 'lucide-react';
+import { formatBDT } from '../../lib/utils.ts';
 
 enum OperationType {
   UPDATE = 'update',
@@ -223,9 +224,9 @@ export default function AdminOrders() {
                   <div class="section-title">Logistics Status</div>
                   <div style="font-size: 12px; font-weight: 900; color: #059669; text-transform: uppercase;">${order.status}</div>
                </div>
-               <div style="text-align: right;">
+                <div style="text-align: right;">
                   <div class="section-title">Total Value</div>
-                  <div style="font-size: 24px; font-weight: 900;">৳${order.total.toLocaleString()}</div>
+                  <div style="font-size: 24px; font-weight: 900;">${formatBDT(order.total)}</div>
                </div>
             </div>
 
@@ -574,7 +575,7 @@ export default function AdminOrders() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 font-bold">৳{order.total.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 font-bold">{formatBDT(order.total)}</td>
                     <td className="px-6 py-4">
                        <div className="flex flex-col gap-1 max-w-[150px] overflow-hidden">
                          {order.items?.map((item: any, i: number) => (
@@ -704,7 +705,7 @@ export default function AdminOrders() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-base font-black text-emerald-600 tabular-nums">৳{order.total.toLocaleString()}</div>
+                    <div className="text-base font-black text-emerald-600 tabular-nums">{formatBDT(order.total)}</div>
                     <div className="mt-1">
                       <input 
                          type="date"
@@ -893,8 +894,8 @@ export default function AdminOrders() {
                      <div>
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">District</label>
                         <select value={newOrder.district} onChange={e => setNewOrder({...newOrder, district: e.target.value})} className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 font-bold text-sm">
-                           <option value="Dhaka">Dhaka (৳60)</option>
-                           <option value="Outside Dhaka">Outside Dhaka (৳100)</option>
+                           <option value="Dhaka">Dhaka (60 TK)</option>
+                           <option value="Outside Dhaka">Outside Dhaka (100 TK)</option>
                         </select>
                      </div>
                      <div>
@@ -946,8 +947,8 @@ export default function AdminOrders() {
                            <div>
                               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">District</label>
                               <select value={newOrder.district} onChange={e => setNewOrder({...newOrder, district: e.target.value})} className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 font-bold text-sm">
-                                 <option value="Dhaka">Dhaka (৳60)</option>
-                                 <option value="Outside Dhaka">Outside Dhaka (৳100)</option>
+                                 <option value="Dhaka">Dhaka (60 TK)</option>
+                                 <option value="Outside Dhaka">Outside Dhaka (100 TK)</option>
                               </select>
                            </div>
                            <div>
@@ -990,7 +991,7 @@ export default function AdminOrders() {
                               </div>
                               <div className="flex-1 min-w-0">
                                  <p className="text-[11px] font-black text-slate-900 group-hover:text-emerald-600 truncate">{p.name}</p>
-                                 <p className="text-[10px] font-bold text-emerald-600 mt-0.5">৳{p.discountPrice || p.price}</p>
+                                 <p className="text-[10px] font-bold text-emerald-600 mt-0.5">{formatBDT(p.discountPrice || p.price)}</p>
                               </div>
                               <Plus className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 group-hover:scale-110 transition-transform" />
                            </button>
@@ -1006,7 +1007,7 @@ export default function AdminOrders() {
                                    <div className="flex-1 min-w-0">
                                       <p className="text-xs font-black text-slate-900 truncate pr-2">{item.name}</p>
                                       <p className="text-[10px] text-slate-500 mt-1">
-                                         {item.quantity} x <span className="font-bold text-emerald-600">৳{item.price}</span>
+                                         {item.quantity} x <span className="font-bold text-emerald-600">{formatBDT(item.price)}</span>
                                       </p>
                                    </div>
                                    <button 
@@ -1024,19 +1025,18 @@ export default function AdminOrders() {
                   </div>
                </div>
 
-               {/* Right side Footer */}
-               <div className="bg-slate-900 text-white p-4 md:p-8 space-y-3 md:rounded-tl-[2.5rem] flex-shrink-0 w-full z-20">
+                           <div className="bg-slate-900 text-white p-4 md:p-8 space-y-3 md:rounded-tl-[2.5rem] flex-shrink-0 w-full z-20">
                   <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-tighter">
                      <span>Subtotal</span>
-                     <span>৳{newOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0)}</span>
+                     <span>{formatBDT(newOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0))}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-tighter">
                      <span>Delivery ({newOrder.source === 'physical' ? 'Physical' : newOrder.district})</span>
-                     <span>৳{newOrder.source === 'physical' ? 0 : (newOrder.district === 'Dhaka' ? 60 : 100)}</span>
+                     <span>{formatBDT(newOrder.source === 'physical' ? 0 : (newOrder.district === 'Dhaka' ? 60 : 100))}</span>
                   </div>
                   <div className="flex justify-between text-lg md:text-xl font-black pt-2 border-t border-white/10">
                      <span className="italic">TOTAL</span>
-                     <span className="text-emerald-400">৳{(newOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0) + (newOrder.source === 'physical' ? 0 : (newOrder.district === 'Dhaka' ? 60 : 100))).toFixed(2)}</span>
+                     <span className="text-emerald-400">{formatBDT(newOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0) + (newOrder.source === 'physical' ? 0 : (newOrder.district === 'Dhaka' ? 60 : 100)))}</span>
                   </div>
                   <div className="flex gap-2 md:gap-3 pt-2">
                      <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-3 md:py-4 text-slate-400 font-bold hover:text-white transition text-xs md:text-sm">Cancel</button>

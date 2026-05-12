@@ -5,6 +5,7 @@ import { ArrowRight, ShoppingCart, Star, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useBannerStore } from '../store/bannerStore.ts';
 import { motion } from 'motion/react';
+import { formatBDT } from '../lib/utils.ts';
 
 const FADE_UP_ANIMATION_VARIANTS = {
   hidden: { opacity: 0, y: 30 },
@@ -103,7 +104,7 @@ export default function Home() {
                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                        <div className="absolute bottom-6 left-6 right-6">
                          <p className="text-[9px] font-bold text-[#CFA670] uppercase tracking-widest mb-1.5 drop-shadow-sm">Explore Collection</p>
-                         <h3 className="text-xl sm:text-2xl font-light text-white tracking-widest uppercase drop-shadow-sm">{cat}</h3>
+                         <h3 className="text-xl sm:text-2xl font-light text-white tracking-widest uppercase drop-shadow-sm">{cat.replace('-', ' ')}</h3>
                        </div>
                     </Link>
                   );
@@ -166,11 +167,11 @@ export default function Home() {
                         <div className="flex flex-col min-w-0">
                            {product.discountPrice && product.discountPrice < product.price ? (
                              <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-900 truncate">৳{product.discountPrice}</span>
-                               <span className="text-[10px] text-slate-400 line-through font-medium truncate">৳{product.price}</span>
+                               <span className="text-sm font-bold text-slate-900 truncate">{formatBDT(product.discountPrice)}</span>
+                               <span className="text-[10px] text-slate-400 line-through font-medium truncate">{formatBDT(product.price)}</span>
                              </div>
                            ) : (
-                             <span className="text-sm font-bold text-slate-900 truncate">৳{product.price}</span>
+                             <span className="text-sm font-bold text-slate-900 truncate">{formatBDT(product.price)}</span>
                            )}
                         </div>
                        <button 

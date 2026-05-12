@@ -3,6 +3,7 @@ import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ArrowLeft } from 'lucide-
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.ts';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatBDT } from '../lib/utils.ts';
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCartStore();
@@ -80,7 +81,7 @@ export default function Cart() {
                             </Link>
                           </h3>
                         </div>
-                        <p className="mt-2 text-xl font-black text-emerald-600 tracking-tight">৳{item.price}</p>
+                        <p className="mt-2 text-xl font-black text-emerald-600 tracking-tight">{formatBDT(item.price)}</p>
                       </div>
 
                       <div className="mt-4 sm:mt-0 sm:pr-9 flex flex-col sm:items-end justify-center">
@@ -128,7 +129,7 @@ export default function Cart() {
           <dl className="mt-6 space-y-4 text-sm text-slate-600">
             <div className="flex items-center justify-between">
               <dt className="text-sm font-medium">Subtotal</dt>
-              <dd className="text-base font-bold text-slate-900">৳{cartTotal().toFixed(2)}</dd>
+              <dd className="text-base font-bold text-slate-900">{formatBDT(cartTotal())}</dd>
             </div>
             <div className="flex items-center justify-between border-t border-slate-200 pt-4">
               <dt className="flex items-center text-sm font-medium">Delivery Fee</dt>
@@ -136,7 +137,7 @@ export default function Cart() {
             </div>
             <div className="flex items-center justify-between border-t border-slate-900 pt-4">
               <dt className="text-base font-black text-slate-900">Total</dt>
-              <dd className="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">৳{cartTotal().toFixed(2)}</dd>
+              <dd className="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">{formatBDT(cartTotal())}</dd>
             </div>
           </dl>
 

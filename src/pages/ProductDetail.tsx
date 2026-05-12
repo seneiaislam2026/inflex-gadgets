@@ -4,6 +4,7 @@ import { useCartStore } from '../store/cartStore.ts';
 import { useState } from 'react';
 import { ArrowLeft, ShoppingBag, Shield, Truck, RefreshCcw } from 'lucide-react';
 import { motion } from 'motion/react';
+import { formatBDT } from '../lib/utils.ts';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -55,19 +56,25 @@ export default function ProductDetail() {
           <div className="mb-8">
             {product.discountPrice && product.discountPrice < product.price ? (
               <div className="flex items-center space-x-4">
-                <p className="text-4xl font-black text-emerald-600">৳{product.discountPrice}</p>
+                <p className="text-4xl font-black text-emerald-600">{formatBDT(product.discountPrice)}</p>
                 <div className="flex flex-col">
-                   <p className="text-sm font-bold text-rose-500 uppercase tracking-widest mb-0.5">Save ৳{product.price - product.discountPrice}</p>
-                   <p className="text-lg font-bold text-slate-400 line-through leading-none">৳{product.price}</p>
+                   <p className="text-sm font-bold text-rose-500 uppercase tracking-widest mb-0.5">Save {formatBDT(product.price - product.discountPrice)}</p>
+                   <p className="text-lg font-bold text-slate-400 line-through leading-none">{formatBDT(product.price)}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-4xl font-black text-slate-900">৳{product.price}</p>
+              <p className="text-4xl font-black text-slate-900">{formatBDT(product.price)}</p>
             )}
           </div>
-          <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
+          <p className="text-slate-500 text-lg mb-6 leading-relaxed font-medium">
             {product.description}
           </p>
+
+          {product.details && (
+            <div className="mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100 italic text-slate-600 text-sm whitespace-pre-wrap">
+              {product.details}
+            </div>
+          )}
           
           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 mb-10 shadow-sm">
             <div className="flex items-center justify-between mb-4">

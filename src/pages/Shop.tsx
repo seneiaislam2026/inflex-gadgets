@@ -4,6 +4,7 @@ import { Filter, ShoppingBag, Search, Sparkles } from 'lucide-react';
 import { useCartStore } from '../store/cartStore.ts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
+import { formatBDT } from '../lib/utils.ts';
 
 export default function Shop() {
   const { products, loading } = useFetchProducts();
@@ -13,7 +14,12 @@ export default function Shop() {
   const categoryFilter = searchParams.get('category') || 'all';
   const searchQuery = searchParams.get('q') || '';
 
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category))).filter(Boolean)];
+  const formatCategoryName = (cat: string) => {
+    if (cat === 'all') return 'All Products';
+    return cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ');
+  };
+
+  const categories: string[] = ['all', ...Array.from(new Set(products.map(p => p.category))).filter((c): c is string => typeof c === 'string' && c !== '')];
 
   const filteredProducts = products.filter(p => {
     const matchCat = categoryFilter === 'all' ? true : p.category === categoryFilter;
@@ -40,7 +46,7 @@ export default function Shop() {
                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
                  }`}
                >
-                 {cat === 'all' ? 'All Products' : cat}
+                 {formatCategoryName(cat)}
                </button>
              ))}
          </div>
@@ -107,11 +113,11 @@ export default function Shop() {
                          <div className="flex flex-col min-w-0">
                             {product.discountPrice && product.discountPrice < product.price ? (
                               <>
-                                <span className="text-base sm:text-lg font-black text-slate-900 truncate">৳{product.discountPrice}</span>
-                                <span className="text-[10px] sm:text-xs text-slate-400 line-through font-bold mt-0.5 truncate">৳{product.price}</span>
+                                <span className="text-base sm:text-lg font-black text-slate-900 truncate">{formatBDT(product.discountPrice)}</span>
+                                <span className="text-[10px] sm:text-xs text-slate-400 line-through font-bold mt-0.5 truncate">{formatBDT(product.price)}</span>
                               </>
                             ) : (
-                              <span className="text-base sm:text-lg font-black text-slate-900 truncate">৳{product.price}</span>
+                              <span className="text-base sm:text-lg font-black text-slate-900 truncate">{formatBDT(product.price)}</span>
                             )}
                          </div>
                         <button 
